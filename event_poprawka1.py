@@ -43,7 +43,7 @@ s=s.T
 len_min = int(min(times[:,1]-times[:,0])*Fs)
 len_max = int(max(times[:,1]-times[:,0])*Fs)
 len_mean = int(np.mean(times[:,1]-times[:,0])*Fs)
-len_frag = len_mean
+len_frag = len_min
 
 
 # Retrieveing trial fragments - 5sec~response. # 0 - 9Hz, 1- 12 Hz
@@ -62,7 +62,7 @@ spect_mean_12 = 0
 sf9 = ss.filtfilt(b9,a9,s)
 sf12= ss.filtfilt(b12,a12,s)
 
-channel = 0
+channel = 5
 # Selecting trial fragments and inserting into matrix, then calculating instantaneous power with
 # Hilbert transform. Then subtracting the mean power.
 for event in range(204):
@@ -96,16 +96,16 @@ sp_d_12 = np.mean(sp_diff[1], axis=0) -spect_mean_12/(num_same+num_diff)
 fig = plt.figure(figsize=(8,3))
 
 plt.subplot(1,2,1)
-plt.plot(np.arange(0,len_mean/Fs, 1/Fs),sp_s_9)
-plt.plot(np.arange(0,len_mean/Fs, 1/Fs),sp_d_9)
-plt.ylim(-500,3500)
+plt.plot(np.arange(0,len_frag/Fs, 1/Fs),sp_s_9)
+plt.plot(np.arange(0,len_frag/Fs, 1/Fs),sp_d_9)
+plt.ylim(-150,1000)
 plt.title('9 Hz')
 plt.grid('on')
 plt.subplot(1,2,2)
-plt.plot(np.arange(0,len_mean/Fs, 1/Fs),sp_s_12)
-plt.plot(np.arange(0,len_mean/Fs, 1/Fs),sp_d_12)
+plt.plot(np.arange(0,len_frag/Fs, 1/Fs),sp_s_12)
+plt.plot(np.arange(0,len_frag/Fs, 1/Fs),sp_d_12)
 plt.legend(['con', 'incon'])
-plt.ylim(0,600)
+plt.ylim(-150,1000)
 plt.title('12 Hz')
 plt.grid('on')
 
