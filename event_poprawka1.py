@@ -11,8 +11,23 @@ ch_names = ['P3','Cz','O2','P4','C3','O1','Pz','C4','ACC_x','ACC_y<',
             'ACC_z','RSSI','Dongle','Head',
             'PC','SCounter','TSS']
 
+# Extracting chosen key and the right key.
+with open('CV_32_flankery.csv') as csv_file:
+    data = pandas.read_csv(csv_file)
+num_trials = len(data)-1
+keys = np.zeros((num_trials,5),dtype=str) # row 0 - correct, row 1 - chosen, row 2 - r/f
+                                   # row 3  - side, row 4 - center
+                            
+for event in range(num_trials):
+    keys[event,0]=data['CORRECT'][event+1]
+    keys[event,1]=data['key_resp_trial.keys'][event+1]
+    keys[event,2]=data['key_resp_trial.corr'][event+1]
+    keys[event,3]=data['PARAM_G'][event+1]
+    keys[event,4]=data['PARAM_S'][event+1]
+
+
 # Extracting for each trial start and response times.
-times = np.zeros((204,2),dtype=float) # row 0 - starts, row 1 - responses
+times = np.zeros((num_trials,2),dtype=float) # row 0 - starts, row 1 - responses
 soup = BeautifulSoup(open('CV_32_flankery.tag'), 'lxml')
 event_num = 0
 for tag in soup.find_all('tag'):
@@ -21,17 +36,6 @@ for tag in soup.find_all('tag'):
         times[event_num,1] = float(tag['position'])+float(tag['length'])
         event_num+=1
         
-# Extracting chosen key and the right key.
-with open('CV_32_flankery.csv') as csv_file:
-    data = pandas.read_csv(csv_file)
-keys = np.zeros((204,5),dtype=str) # row 0 - correct, row 1 - chosen, row 2 - r/f
-                                   # row 3  - side, row 4 - center
-for event in range(204):
-    keys[event,0]=data['CORRECT'][event+1]
-    keys[event,1]=data['key_resp_trial.keys'][event+1]
-    keys[event,2]=data['key_resp_trial.corr'][event+1]
-    keys[event,3]=data['PARAM_G'][event+1]
-    keys[event,4]=data['PARAM_S'][event+1]
 
 # Opening file.
 with open('CV_32_flankery.raw') as f:
@@ -65,22 +69,22 @@ sf12= ss.filtfilt(b12,a12,s)
 channel = 5
 # Selecting trial fragments and inserting into matrix, then calculating instantaneous power with
 # Hilbert transform. Then subtracting the mean power.
-for event in range(204):
+for event in range(num_trials):
     trial_9 = sf9[channel][(int((times[event,0])*Fs)):(int(times[event,0]*Fs)+len_frag)]
     trial_12 = sf12[channel][(int((times[event,0])*Fs)):(int(times[event,0]*Fs)+len_frag)]
     if (keys[event,2] == '1') and (keys[event,3]==keys[event,4]): 
         trials_same[0,num_same,:]=trial_9
         trials_same[1,num_same,:]=trial_12
-        sp_same[0,num_same,:]= abs(ss.hilbert(trial_9))**2
-        sp_same[1,num_same,:]=abs(ss.hilbert(trial_12))**2
+        sp_same[0,num_same,:]= np.abs(ss.hilbert(trial_9))**2
+        sp_same[1,num_same,:]=np.abs(ss.hilbert(trial_12))**2
         spect_mean_9 += sf9[channel][int(times[event,0]*Fs - (0.2)*Fs)]**2
         spect_mean_12 += sf12[channel][int(times[event,0]*Fs - (0.2)*Fs)]**2
         num_same +=1
     elif (keys[event,2] == '1') and (keys[event,3]!=keys[event,4]):
         trials_diff[0,num_diff,:]=trial_9
         trials_diff[1,num_diff,:]=trial_12
-        sp_diff[0,num_diff,:]= abs(ss.hilbert(trial_9))**2
-        sp_diff[1,num_diff,:]=abs(ss.hilbert(trial_12))**2
+        sp_diff[0,num_diff,:]= np.abs(ss.hilbert(trial_9))**2
+        sp_diff[1,num_diff,:]=np.abs(ss.hilbert(trial_12))**2
         spect_mean_9 += sf9[channel][int(times[event,0]*Fs - (0.2)*Fs)]**2
         spect_mean_12 += sf12[channel][int(times[event,0]*Fs - (0.2)*Fs)]**2
         num_diff +=1
@@ -115,5 +119,3 @@ fig.text(-0.01, 0.5,'Amplitude' , va='center', rotation='vertical',fontsize=12)
 
 plt.tight_layout()
 plt.show()
-
-
