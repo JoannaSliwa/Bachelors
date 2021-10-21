@@ -1,2 +1,2 @@
 # Bachelors
-Bachelors degree thesis 
+Bachelors degree thesis about relationship between selective attention and BCI performance
